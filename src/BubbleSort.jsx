@@ -22,8 +22,7 @@ function BubbleSort() {
 
         for (let i = 0; i < currentArray.length; i++) {
             const x = i * squareSize;
-
-            // Fill square
+     
             ctx.fillStyle = i==index1 ?"green":i==index1+1?"yellow":"white";
             ctx.fillRect(x, 0, squareSize, squareSize);
 
@@ -42,29 +41,30 @@ function BubbleSort() {
     //     let currentArray = [...arr];
     //     let n = currentArray.length;
     //     let i = 0, j = 0;
-
+    
     //     function sortStep() {
     //         if (i < n) {
     //             if (j < n - i - 1) {
+    //                 drawArray(currentArray, j); // Highlight current pair
+    
     //                 if (currentArray[j] > currentArray[j + 1]) {
-    //                     // Swap
     //                     let temp = currentArray[j];
     //                     currentArray[j] = currentArray[j + 1];
     //                     currentArray[j + 1] = temp;
     //                 }
     //                 j++;
+    //                 setTimeout(sortStep, 1000); // Faster step for better feel
     //             } else {
     //                 j = 0;
     //                 i++;
+    //                 setTimeout(sortStep, 1000);
     //             }
-
-    //             drawArray(currentArray,j);
-    //             setTimeout(sortStep, 2000); // Delay for animation
     //         } else {
-    //             setArr(currentArray); // Final state
+    //             drawArray(currentArray, -1); // Draw final array without highlights
+    //             setArr(currentArray); // Update state
     //         }
     //     }
-
+    
     //     sortStep();
     // }
 
@@ -73,32 +73,86 @@ function BubbleSort() {
         let n = currentArray.length;
         let i = 0, j = 0;
     
+        function animateSwap(a, b, callback) {
+            const steps = 10;
+            let step = 0;
+    
+            function drawStep() {
+                const canvas = canvasRef.current;
+                const ctx = canvas.getContext("2d");
+    
+                canvas.width = currentArray.length * 100;
+                canvas.height = 100;
+    
+                const squareSize = 100;
+    
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+                ctx.font = "24px sans-serif";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+    
+                for (let k = 0; k < currentArray.length; k++) {
+                    let x = k * squareSize;
+                    let offset = 0;
+    
+                    if (k === a) {
+                        offset = ((b - a) * squareSize * step) / steps;
+                    } else if (k === b) {
+                        offset = ((a - b) * squareSize * step) / steps;
+                    }
+    
+                    ctx.fillStyle = (k === a || k === b) ? "orange" : "white";
+                    ctx.fillRect(x + offset, 0, squareSize, squareSize);
+    
+                    ctx.strokeStyle = "black";
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(x + offset, 0, squareSize, squareSize);
+    
+                    ctx.fillStyle = "black";
+                    ctx.fillText(currentArray[k], x + offset + squareSize / 2, squareSize / 2);
+                }
+    
+                step++;
+                if (step <= steps) {
+                    requestAnimationFrame(drawStep);
+                } else {
+                    // Actually swap after animation
+                    [currentArray[a], currentArray[b]] = [currentArray[b], currentArray[a]];
+                    callback();
+                }
+            }
+    
+            drawStep();
+        }
+    
         function sortStep() {
             if (i < n) {
                 if (j < n - i - 1) {
-                    drawArray(currentArray, j); // Highlight current pair
-    
                     if (currentArray[j] > currentArray[j + 1]) {
-                        // Swap
-                        let temp = currentArray[j];
-                        currentArray[j] = currentArray[j + 1];
-                        currentArray[j + 1] = temp;
+                        animateSwap(j, j + 1, () => {
+                            j++;
+                            setTimeout(sortStep, 1000); // Short pause after animation
+                        });
+                    } else {
+                        drawArray(currentArray, j);
+                        j++;
+                        setTimeout(sortStep, 1000);
                     }
-                    j++;
-                    setTimeout(sortStep, 300); // Faster step for better feel
                 } else {
                     j = 0;
                     i++;
-                    setTimeout(sortStep, 300);
+                    setTimeout(sortStep, 1000);
                 }
             } else {
-                drawArray(currentArray, -1); // Draw final array without highlights
-                setArr(currentArray); // Update state
+                drawArray(currentArray, -1);
+                setArr(currentArray);
             }
         }
     
         sortStep();
     }
+    
     
     useEffect(() => {
         drawArray(arr);
